@@ -32,15 +32,6 @@ def get_running_task_runs():
     )
 
 
-@api.route("/error", defaults={"status_code": "501"})
-@api.route("/error/<string:status_code>")
-def intentional_error(status_code):
-    """
-    A helper endpoint to test out cases in the UI where an error occurs.
-    """
-    raise InvalidUsage("An error occured", status_code=int(status_code))
-
-
 @api.route("/task_runs/reviewable")
 def get_reviewable_task_runs():
     """
@@ -73,14 +64,10 @@ def register(requester_type):
     try:
         parsed_options = parse_arg_dict(RequesterClass, options)
     except Exception as e:
-        return jsonify(
-            {"success": False, "msg": f"error in parsing arguments: {str(e)}"}
-        )
+        raise ApiError(f"Error parsing arguments: {str(e)}")
 
     if "name" not in parsed_options:
-        return jsonify(
-            {"success": False, "msg": "No name was specified for the requester."}
-        )
+        raise ApiError(f"No name was specified for the requester")
 
     requesters = db.find_requesters(requester_name=parsed_options["name"])
     if len(requesters) == 0:
@@ -110,8 +97,17 @@ def get_balance(requester_name):
     requester = requesters[0]
     return jsonify({"balance": requester.get_available_budget()})
 
+@api.route("/error", defaults={"status_code": "501"})
+@api.route("/error/<string:status_code>")
+def intentional_error_endpoint_for_testing_purposes(status_code):
+    """
+    A helper endpoint to test out cases in the UI where an error occurs.
+    """
+    raise ApiError("An error occured", status_code=int(status_code))
 
-class InvalidUsage(Exception):
+
+
+class ApiError(Exception):
     status_code = 400
 
     def __init__(self, message, status_code=None, payload=None):
@@ -127,7 +123,16 @@ class InvalidUsage(Exception):
         return rv
 
 
-@api.errorhandler(InvalidUsage)
+@api.errorhandler(Exception)
+def handle_invalid_usage(error):
+    response = jsonify({
+        'message': str(error),
+        'error_code': 'exception'
+    })
+    response.status_code = 500
+    return response
+
+@api.errorhandler(ApiError)
 def handle_invalid_usage(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
