@@ -376,7 +376,7 @@ def create_hit_with_hit_type(
     response = client.create_hit_with_hit_type(
         HITTypeId=hit_type_id,
         MaxAssignments=num_assignments,
-        LifetimeInSeconds=60 * 60 * 24 * 3,
+        LifetimeInSeconds=60 * 60 * 24,
         Question=question_data_struture,
     )
 
