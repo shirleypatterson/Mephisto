@@ -9,6 +9,7 @@ from mephisto.providers.mturk.mturk_utils import (
     setup_aws_credentials,
     get_requester_balance,
     check_aws_credentials,
+    get_all_hits,
 )
 from mephisto.providers.mturk.provider_type import PROVIDER_TYPE
 
@@ -95,6 +96,11 @@ class MTurkRequester(Requester):
         """Get the available budget from MTurk"""
         client = self._get_client(self._requester_name)
         return get_requester_balance(client)
+
+    def get_all_hits(self):
+        """ List all HITs on the MTurk server"""
+        client = self._get_client(self._requester_name)
+        return get_all_hits(client)
 
     @staticmethod
     def new(db: "MephistoDB", requester_name: str) -> "Requester":
