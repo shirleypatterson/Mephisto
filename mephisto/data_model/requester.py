@@ -51,6 +51,9 @@ class Requester(ABC):
             # We are constructing another instance directly
             return super().__new__(cls)
 
+    def __str__(self):
+        return f"{self.requester_name}@{self.provider_type}"
+        
     def get_task_runs(self) -> List["TaskRun"]:
         """
         Return the list of task runs that are run by this requester

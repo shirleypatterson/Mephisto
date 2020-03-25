@@ -294,6 +294,30 @@ class Supervisor:
         agent.pending_actions.append(packet)
         agent.has_action.set()
 
+# message: register_worker
+# Registering worker:
+# Worker id=1:
+#   name = AHJQF4WEPBEHJ_sandbox
+#   provider = mturk_sandbox
+# message: register_agent
+# Unit 169 is launching with Agent id=12:
+#   worker_id = 1
+#   data_dir = /private/home/dnovotny/mephisto/data/data/runs/NO_PROJECT/37/28/12
+#   unit = 169
+#   assignment = 28
+#   status = none
+# message: init_data_request
+# SAVED_DATA_TO_DISC {'inputs': {'html': 'merged.out.html', 'character_name': 'Loaded Character 1', 'character_description': "I'm a character loaded from Mephisto!"}, 'outputs': None}
+# message: return_status
+
+# message: register_worker
+# Registering worker:
+# Worker id=1:
+#   name = AHJQF4WEPBEHJ_sandbox
+#   provider = mturk_sandbox
+# message: register_agent
+# message: return_status
+
     def _register_worker(self, packet: Packet, socket_info: SocketInfo):
         """Process a worker registration packet to register a worker"""
         crowd_data = packet.data["provider_data"]
@@ -310,6 +334,8 @@ class Supervisor:
         else:
             worker = workers[0]
         # TODO any sort of processing to see if this worker is blocked from the provider side?
+        print('Registering worker:')
+        print(worker)
         self.message_queue.append(
             Packet(
                 packet_type=PACKET_TYPE_PROVIDER_DETAILS,
@@ -361,12 +387,15 @@ class Supervisor:
             if not agent.did_submit.is_set():
                 # Wait for a submit to occur
                 # TODO make submit timeout configurable
+                print(f'u{unit.db_id}: agent.has_action.wait(timeout=300)')
                 agent.has_action.wait(timeout=300)
+                print(f'u{unit.db_id}: agent.act()')
                 agent.act()
+                print(f'u{unit.db_id}: Done with agent.act()')
             agent.mark_done()
         except Exception as e:
+            print(f'u{unit.db_id}: Caught agent exception {str(e)}')
             import traceback
-
             traceback.print_exc()
             # TODO handle runtime exceptions for assignments
             task_runner.cleanup_unit(unit)
@@ -394,6 +423,7 @@ class Supervisor:
                     data={"request_id": packet.data["request_id"], "agent_id": None},
                 )
             )
+            
         else:
             agent = crowd_provider.AgentClass.new_from_provider_data(
                 self.db, worker, unit, crowd_data
@@ -542,6 +572,7 @@ class Supervisor:
                 # Send a packet with onboarding information
                 # TODO use the agent id request as the agent_id?
                 onboard_data = blueprint.get_onboarding_data()
+                print(onboard_data)
                 self.message_queue.append(
                     Packet(
                         packet_type=PACKET_TYPE_PROVIDER_DETAILS,
@@ -564,8 +595,10 @@ class Supervisor:
         task_runner = socket_info.job.task_runner
         agent_id = packet.data["provider_data"]["agent_id"]
         agent_info = self.agents[agent_id]
+        print(f'supervisor._get_init_data(): a{agent_id}')
         unit_data = task_runner.get_init_data_for_agent(agent_info.agent)
 
+        print(f'supervisor._get_init_data(): a{agent_id} sending unit_data = {str(unit_data)}')
         agent_data_packet = Packet(
             packet_type=PACKET_TYPE_INIT_DATA,
             sender_id=SYSTEM_SOCKET_ID,
@@ -576,6 +609,7 @@ class Supervisor:
 
     def _on_message(self, packet: Packet, socket_info: SocketInfo):
         """Handle incoming messages from the socket"""
+        print(f'message: {packet.type}')
         if packet.type == PACKET_TYPE_AGENT_ACTION:
             self._on_act(packet, socket_info)
         elif packet.type == PACKET_TYPE_NEW_AGENT:
@@ -670,27 +704,34 @@ class Supervisor:
         Takes as input a mapping from agent_id to server-side status
         """
         for agent_id, status in status_map.items():
+            print(f'a{agent_id}: Updating status to {status}')
             if status not in AgentState.valid():
                 # TODO update with logging
                 print(f"Invalid status for agent {agent_id}: {status}")
                 continue
             if agent_id not in self.agents:
+                print(f'a{agent_id}: No longer stracking')
                 # no longer tracking agent
                 continue
             agent = self.agents[agent_id].agent
             db_status = agent.get_status()
+            print(f'a{agent_id}: db_status = {db_status}')
             if agent.has_updated_status.is_set():
+                print(f'a{agent_id}: status not updated')
                 continue  # Incoming info may be stale if we have new info to send
             if status == AgentState.STATUS_NONE:
                 # Stale or reconnect, send a status update
+                print(f'a{agent_id}: AgentState.STATUS_NONE (stale or reconnect) -> send update')
                 self._send_status_update(self.agents[agent_id])
                 continue
             if status != db_status:
+                print(f'a{agent_id}: status != db_status')
                 if db_status in AgentState.complete():
                     print(
                         f"Got updated status {status} when already final: {agent.db_status}"
                     )
                     continue
+                print(f'a{agent_id}: final update to {status}')
                 agent.update_status(status)
         pass
 
@@ -730,8 +771,18 @@ class Supervisor:
 
     def _socket_handling_thread(self) -> None:
         """Thread for handling outgoing messages through the socket"""
+        
+        # import keyboard  # using module keyboard
+        # def debug_on_keypress(key='d'):
+        #     try:
+        #         if keyboard.is_pressed(key):
+        #             import pdb; pdb.set_trace()
+        #     except:
+        #         pass
+        
         while len(self.sockets) > 0:
             for agent_info in self.agents.values():
+                # debug_on_keypress()
                 if agent_info.agent.wants_action.is_set():
                     self._request_action(agent_info)
                     agent_info.agent.wants_action.clear()
@@ -751,3 +802,4 @@ class Supervisor:
             target=self._socket_handling_thread, name=f"socket-sending-thread"
         )
         self.sending_thread.start()
+
