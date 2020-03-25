@@ -390,6 +390,23 @@ class HerokuArchitect(Architect):
         )
         time.sleep(HEROKU_WAIT_TIME)
 
+    def ping_server(self) -> int:
+        heroku_app_name = self.__get_app_name()
+        url = f"https://{heroku_app_name}.herokuapp.com"
+        ping = subprocess.Popen(
+            ["ping", "-c", "4", url],
+            stdout = subprocess.PIPE,
+            stderr = subprocess.PIPE
+        )
+        out, error = ping.communicate()
+        import pdb; pdb.set_trace()
+
+        # try:
+        #     delay = ping.Ping(url, timeout=2000).do()
+        # except socket.error as e:
+        #     print(f"Ping Error: {e}")
+        # return delay
+        
     def server_is_running(self) -> bool:
         """
         Utility function to check if the given heroku app (by app-name) is

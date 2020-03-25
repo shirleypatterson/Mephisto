@@ -10,6 +10,7 @@ import json
 import re
 from typing import Dict, Optional, Tuple, List, Any, TYPE_CHECKING
 from datetime import datetime
+# from tqdm import tqdm
 
 from botocore import client
 from botocore.exceptions import ClientError
@@ -585,7 +586,9 @@ def email_worker(
 
 def get_all_hits(client: MTurkClient):
     """ Get all HITs on the MTurk server """
+    print('Getting all HITs (might take some time) ...')
     hits = []
-    for page in client.get_paginator('list_hits').paginate():
-        hits.extend(page['HITs'])
-    return hits
+    hits = client.get_paginator(
+        'list_hits').paginate(
+            PaginationConfig={'PageSize': 100}).build_full_result()
+    return hits['HITs']
