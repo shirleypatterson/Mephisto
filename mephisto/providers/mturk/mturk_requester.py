@@ -10,8 +10,11 @@ from mephisto.providers.mturk.mturk_utils import (
     get_requester_balance,
     check_aws_credentials,
     get_all_hits,
+    approve_assignments_for_hit,
 )
 from mephisto.providers.mturk.provider_type import PROVIDER_TYPE
+
+from datetime import datetime
 
 from typing import List, Optional, Dict, Any, TYPE_CHECKING
 
@@ -102,6 +105,28 @@ class MTurkRequester(Requester):
         client = self._get_client(self._requester_name)
         return get_all_hits(client)
 
+    def delete_hit(self, hit_id, hit_status, approve_all=False):
+        """ Delete, and optionally approve (approve_all=True), a HIT """
+        client = self._get_client(self._requester_name)
+        if hit_status=='Assignable':
+            response = client.update_expiration_for_hit(
+                HITId=hit_id,
+                ExpireAt=datetime(2015, 1, 1) # some time in history
+            )
+        elif hit_status=='Reviewable' and approve_all:
+            approve_assignments_for_hit(
+                client, hit_id, override_rejection=True
+            )
+            
+        # Delete the HIT
+        try:
+            client.delete_hit(HITId=hit_id)
+        except Exception as e:
+            print(f'{hit_id} not deleted:')
+            print(e)
+        else:
+            print(f'{hit_id} deleted')
+            
     @staticmethod
     def new(db: "MephistoDB", requester_name: str) -> "Requester":
         return MTurkRequester._register_requester(db, requester_name, PROVIDER_TYPE)

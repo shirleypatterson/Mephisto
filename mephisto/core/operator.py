@@ -196,6 +196,7 @@ class Operator:
         # Setup and deploy the server
         built_dir = architect.prepare()
         task_url = architect.deploy()
+        print(f'Heroku server running on: {task_url}')
 
         # TODO maybe the cleanup (destruction of the server configuration?) should only
         # happen after everything has already been reviewed, this way it's possible to
@@ -254,6 +255,9 @@ class Operator:
             # expired tasks to be able to avoid a sleep call
             time.sleep(2)
 
+    def ping_architect(self) -> int:
+        return self.architect.ping_server()
+        
     def shutdown(self):
         print("operator shutting down")  # TODO logger
         self.is_shutdown = True
