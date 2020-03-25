@@ -65,6 +65,18 @@ class Assignment:
         self.__task: Optional["Task"] = None
         self.__requester: Optional["Requester"] = None
 
+    def __str__(self) -> str:
+        fields_to_print = {
+            'n_units': len(self.get_units()),
+            'data_dir': self.get_data_dir(),
+            'status': self.get_status(),
+            'requester': self.get_requester(),
+        }
+        str_ = [f"Assignment id={self.db_id}:"]
+        for k, v in fields_to_print.items():
+            str_.append(f"  {k} = {str(v)}")
+        return "\n".join(str_)
+
     def get_data_dir(self) -> str:
         """Return the directory we expect to find assignment data in"""
         task_run = self.get_task_run()
@@ -283,6 +295,18 @@ class Unit(ABC):
         else:
             # We are constructing another instance directly
             return super().__new__(cls)
+
+    def __str__(self):
+        fields_to_print = {
+            'sandbox': self.sandbox,
+            'assignment': self.get_assignment().db_id,
+            'status': self.get_status(),
+            'reward': self.get_pay_amount(),
+        }
+        str_ = [f"Unit id={self.db_id}:"]
+        for k, v in fields_to_print.items():
+            str_.append(f"  {k} = {str(v)}")
+        return "\n".join(str_)
 
     def get_crowd_provider_class(self) -> Type["CrowdProvider"]:
         """Get the CrowdProvider class that manages this Unit"""

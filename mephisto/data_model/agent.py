@@ -88,6 +88,19 @@ class Agent(ABC):
 
     # TODO do we want to store task working time or completion time here?
 
+    def __str__(self):
+        fields_to_print = {
+            'worker_id': self.get_worker().db_id,
+            'data_dir': self.get_data_dir(),
+            'unit': self.get_unit().db_id,
+            'assignment': self.get_assignment().db_id,
+            'status': self.get_status(),
+        }
+        str_ = [f"Agent id={self.db_id}:"]
+        for k, v in fields_to_print.items():
+            str_.append(f"  {k} = {str(v)}")
+        return "\n".join(str_)
+
     def get_worker(self) -> Worker:
         """
         Return the worker that is using this agent for a task
@@ -166,7 +179,7 @@ class Agent(ABC):
         if new_status in [AgentState.STATUS_RETURNED, AgentState.STATUS_DISCONNECT]:
             # Disconnect statuses should free any pending acts
             self.has_action.set()
-            self.did_submit.set()
+            self.did_submit.set() #DN:is this good?
 
     @staticmethod
     def _register_agent(
@@ -218,33 +231,46 @@ class Agent(ABC):
         (timeout is None) should return None if no actions are ready
         to be returned.
         """
+
+        print(f'a{self.db_id}: Agent act with timeout {timeout}')
         if len(self.pending_actions) == 0:
+            print(f'a{self.db_id}: No pending actions ... self.wants_action.set()')
             self.wants_action.set()
             if timeout is None or timeout == 0:
                 return None
+            print(f'a{self.db_id}: Waiting for action')
             self.has_action.wait(timeout)
 
         if len(self.pending_actions) == 0:
             # various disconnect cases
             status = self.get_status()
+            print(f'a{self.db_id}: Agent disconnect')
             if status == AgentState.STATUS_DISCONNECT:
+                print(f'a{self.db_id}: AgentState.STATUS_DISCONNECT')
                 raise AgentDisconnectedError(self.db_id)
             elif status == AgentState.STATUS_RETURNED:
+                print(f'a{self.db_id}: AgentState.STATUS_RETURNED')
                 raise AgentReturnedError(self.db_id)
+            print(f'a{self.db_id}: Update state to AgentState.STATUS_TIMEOUT')
             self.update_status(AgentState.STATUS_TIMEOUT)
             raise AgentTimeoutError(timeout, self.db_id)
         # TODO the below needs to be considered an agent timeout
         assert len(self.pending_actions) > 0, "has_action released without an action!"
 
         act = self.pending_actions.pop(0)
+        print(f'a{self.db_id}: Act={str(act)}')
 
         if "MEPHISTO_is_submit" in act.data and act.data["MEPHISTO_is_submit"]:
+            print(f'a{self.db_id}: self.did_submit.set()')
             self.did_submit.set()
 
         # TODO check to see if the act is one of the acts to ERROR on
 
         if len(self.pending_actions) == 0:
+            print(f'a{self.db_id}: self.has_action.clear()')
             self.has_action.clear()
+
+        print(f'a{self.db_id}: update_data: {str(act)}')
         self.state.update_data(act)
         return act
 

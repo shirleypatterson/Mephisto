@@ -186,6 +186,7 @@ class MainApp extends React.Component {
   }
 
   handleSubmit(event) {
+    console.log("HandleSubmit");
     event.preventDefault();
     console.log(event.target);
     const form_data = new FormData(event.target);

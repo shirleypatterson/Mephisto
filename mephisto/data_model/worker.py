@@ -57,6 +57,16 @@ class Worker(ABC):
     # TODO make getters for helpful worker statistics
     # TODO add worker qualification tracking?
 
+    def __str__(self):
+        fields_to_print = {
+            'name': self.worker_name,
+            'provider': self.provider_type,
+        }
+        str_ = [f"Worker id={self.db_id}:"]
+        for k, v in fields_to_print.items():
+            str_.append(f"  {k} = {str(v)}")
+        return "\n".join(str_)
+
     def get_agents(self, status: Optional[str] = None) -> List["Agent"]:
         """
         Get the list of agents that this worker was responsible for, by the given status
@@ -91,6 +101,7 @@ class Worker(ABC):
         self, qualification_name: str
     ) -> Optional["GrantedQualification"]:
         """Return the granted qualification for this worker for the given name"""
+        print(f'Getting qualification {qualification_name}')
         found_qualifications = self.db.find_qualifications(qualification_name)
         if len(found_qualifications) == 0:
             return None
