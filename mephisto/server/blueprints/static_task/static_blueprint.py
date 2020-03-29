@@ -45,11 +45,14 @@ class StaticBlueprint(Blueprint):
         self._initialization_data_dicts: List[Dict[str, Any]] = []
         task_file_name = os.path.basename(self.html_file)
         if opts.get("data_csv") is not None:
+            print('StaticBluepring: Reading input CSV ...')
             csv_file = os.path.expanduser(opts["data_csv"])
             with open(csv_file, "r", encoding="utf-8-sig") as csv_fp:
                 csv_reader = csv.reader(csv_fp)
                 headers = next(csv_reader)
+                print(f'header: {headers}')
                 for row in csv_reader:
+                    print(f'row: {row}')
                     row_data = {"html": task_file_name}
                     for i, col in enumerate(row):
                         row_data[headers[i]] = col

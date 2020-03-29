@@ -123,12 +123,15 @@ class MainApp extends React.Component {
     let fin_html = base_html;
 
     if (this.state.task_data !== null) {
+      console.log("setting task data:")
+      console.log(this.state.task_data)
       for (let [key, value] of Object.entries(this.state.task_data)) {
         let find_string = "${" + key + "}";
         fin_html = fin_html.replace(find_string, value);
       }
+    } else {
+      console.log("no task data to set!")
     }
-
 
     this.setState({
       base_html: base_html,
