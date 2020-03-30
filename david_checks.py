@@ -27,7 +27,7 @@ requester.register()
 requester_name = requester.requester_name
 architect_type = "local" if USE_LOCAL else "heroku"
 assert USE_LOCAL or NO_SANDBOX or requester_name.endswith('_sandbox'), "Should use a sandbox for testing"
-hit_title = "Fruit video task (best done on mobile phone)"
+hit_title = "Fruit video task v2"
 
 # data stored to:
 # /private/home/dnovotny/mephisto/data/data/runs/NO_PROJECT/4/2/2

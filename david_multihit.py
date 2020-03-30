@@ -47,7 +47,7 @@ ARG_STRING = (
     "--task-reward 1.2 "
     "--task-tags static,task,testing "
     f'--data-csv "{data_file}" '
-    '--assignment-duration-seconds 60 ' # max time for a worker to complete.
+    '--assignment-duration-seconds 600 ' # max time for a worker to complete.
     '--task-source "merged.out.html" '
     #'--allow-mobile required '
     '--extra-source-dir payload '
