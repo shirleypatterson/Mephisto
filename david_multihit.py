@@ -9,7 +9,7 @@ from david_common import init_david, load_possible_classes, make_object_class_da
 from datetime import datetime
 import pytz
 
-operator, requester = init_david(NO_SANDBOX=1)
+operator, requester = init_david(NO_SANDBOX=0)
 db = operator.db
 
 if requester.is_sandbox():
@@ -71,7 +71,7 @@ try:
             print(f'=> Assignments #={len(task_run_asgn)} <=')
             for asgn in task_run_asgn:
                 asgn_units = asgn.get_units()
-                print(str(asgn).strip())
+                print(str(asgn))
                 # print('=> Units <=')
                 # for unit in asgn_units:
                 #     print(str(unit))
