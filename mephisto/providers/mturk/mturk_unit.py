@@ -193,6 +193,8 @@ class MTurkUnit(Unit):
         Send a request to expire the HIT, and if it's not assigned return,
         otherwise just return the maximum assignment duration
         """
+        print('expiring unit:')
+        print(str(self))
         delay = 0
         if self.get_status() == AssignmentState.ASSIGNED:
             # The assignment is currently being worked on,

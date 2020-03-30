@@ -40,13 +40,13 @@ class StaticTaskRunner(TaskRunner):
         """
         # XXX good place to throw
         init_state = agent.state.get_init_state()
-        print(f'a{agent.db_id}: init_data_for_agent: {init_state}')
+        # print(f'a{agent.db_id}: init_data_for_agent: {init_state}')
         if init_state is not None:
-            print(f'a{agent.db_id}: init_state=None')
+            # print(f'a{agent.db_id}: init_state=None')
             # reconnecting agent, give what we've got
             return init_state
         else:
-            print(f'a{agent.db_id}: init_state={str(init_state)}')
+            # print(f'a{agent.db_id}: init_state={str(init_state)}')
             assignment = agent.get_unit().get_assignment()
             assignment_data = self.get_data_for_assignment(assignment)
             agent.state.set_init_state(assignment_data.shared)

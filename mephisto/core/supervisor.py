@@ -718,7 +718,7 @@ class Supervisor:
                 continue
             agent = self.agents[agent_id].agent
             db_status = agent.get_status()
-            print(f'a{agent_id}: db_status = {db_status}')
+            # print(f'a{agent_id}: db_status = {db_status}')
             if agent.has_updated_status.is_set():
                 # print(f'a{agent_id}: status not updated')
                 continue  # Incoming info may be stale if we have new info to send

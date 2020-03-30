@@ -9,7 +9,7 @@ from david_common import init_david, load_possible_classes, make_object_class_da
 from datetime import datetime
 import pytz
 
-operator, requester = init_david(NO_SANDBOX=0)
+operator, requester = init_david(NO_SANDBOX=1)
 db = operator.db
 
 if requester.is_sandbox():
@@ -21,9 +21,9 @@ if requester.is_sandbox():
 object_classes = load_possible_classes()
 
 hits_per_class = {
-    'apple': 3,
-    'banana': 3,
-    'orange': 3,
+    'apple': 5,
+    'banana': 5,
+    'orange': 5,
 }
 
 assert all(k in object_classes for k in hits_per_class)
@@ -71,7 +71,7 @@ try:
             print(f'=> Assignments #={len(task_run_asgn)} <=')
             for asgn in task_run_asgn:
                 asgn_units = asgn.get_units()
-                print(str(asgn))
+                print(str(asgn).strip())
                 # print('=> Units <=')
                 # for unit in asgn_units:
                 #     print(str(unit))

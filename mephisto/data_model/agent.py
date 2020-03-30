@@ -232,7 +232,7 @@ class Agent(ABC):
         to be returned.
         """
 
-        print(f'a{self.db_/id}: Agent act with timeout {timeout}')
+        # print(f'a{self.db_id}: Agent act with timeout {timeout}')
         if len(self.pending_actions) == 0:
             # print(f'a{self.db_id}: No pending actions ... self.wants_action.set()')
             self.wants_action.set()
