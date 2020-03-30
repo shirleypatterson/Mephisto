@@ -222,6 +222,7 @@ class Supervisor:
         crowd_data = packet.data["provider_data"]
         crowd_provider = channel_info.job.provider
         worker_name = crowd_data["worker_name"]
+        print(f'Registering worker {worker_name}')
         workers = self.db.find_workers(worker_name=worker_name)
         if len(workers) == 0:
             # TODO get rid of sandbox designation
