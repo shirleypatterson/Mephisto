@@ -387,11 +387,11 @@ class Supervisor:
             if not agent.did_submit.is_set():
                 # Wait for a submit to occur
                 # TODO make submit timeout configurable
-                print(f'u{unit.db_id}: agent.has_action.wait(timeout=300)')
+                # print(f'u{unit.db_id}: agent.has_action.wait(timeout=300)')
                 agent.has_action.wait(timeout=300)
-                print(f'u{unit.db_id}: agent.act()')
+                # print(f'u{unit.db_id}: agent.act()')
                 agent.act()
-                print(f'u{unit.db_id}: Done with agent.act()')
+                # print(f'u{unit.db_id}: Done with agent.act()')
             agent.mark_done()
         except Exception as e:
             print(f'u{unit.db_id}: Caught agent exception {str(e)}')
@@ -575,7 +575,7 @@ class Supervisor:
                 # Send a packet with onboarding information
                 # TODO use the agent id request as the agent_id?
                 onboard_data = blueprint.get_onboarding_data()
-                print(onboard_data)
+                # print(onboard_data)
                 self.message_queue.append(
                     Packet(
                         packet_type=PACKET_TYPE_PROVIDER_DETAILS,
@@ -598,10 +598,10 @@ class Supervisor:
         task_runner = socket_info.job.task_runner
         agent_id = packet.data["provider_data"]["agent_id"]
         agent_info = self.agents[agent_id]
-        print(f'supervisor._get_init_data(): a{agent_id}')
+        # print(f'supervisor._get_init_data(): a{agent_id}')
         unit_data = task_runner.get_init_data_for_agent(agent_info.agent)
 
-        print(f'supervisor._get_init_data(): a{agent_id} sending unit_data = {str(unit_data)}')
+        # print(f'supervisor._get_init_data(): a{agent_id} sending unit_data = {str(unit_data)}')
         agent_data_packet = Packet(
             packet_type=PACKET_TYPE_INIT_DATA,
             sender_id=SYSTEM_SOCKET_ID,
@@ -707,34 +707,34 @@ class Supervisor:
         Takes as input a mapping from agent_id to server-side status
         """
         for agent_id, status in status_map.items():
-            print(f'a{agent_id}: Updating status to {status}')
+            # print(f'a{agent_id}: Updating status to {status}')
             if status not in AgentState.valid():
                 # TODO update with logging
                 print(f"Invalid status for agent {agent_id}: {status}")
                 continue
             if agent_id not in self.agents:
-                print(f'a{agent_id}: No longer stracking')
+                # print(f'a{agent_id}: No longer stracking')
                 # no longer tracking agent
                 continue
             agent = self.agents[agent_id].agent
             db_status = agent.get_status()
-            print(f'a{agent_id}: db_status = {db_status}')
+            # print(f'a{agent_id}: db_status = {db_status}')
             if agent.has_updated_status.is_set():
-                print(f'a{agent_id}: status not updated')
+                # print(f'a{agent_id}: status not updated')
                 continue  # Incoming info may be stale if we have new info to send
             if status == AgentState.STATUS_NONE:
                 # Stale or reconnect, send a status update
-                print(f'a{agent_id}: AgentState.STATUS_NONE (stale or reconnect) -> send update')
+                # print(f'a{agent_id}: AgentState.STATUS_NONE (stale or reconnect) -> send update')
                 self._send_status_update(self.agents[agent_id])
                 continue
             if status != db_status:
-                print(f'a{agent_id}: status != db_status')
+                # print(f'a{agent_id}: status != db_status')
                 if db_status in AgentState.complete():
                     print(
                         f"Got updated status {status} when already final: {agent.db_status}"
                     )
                     continue
-                print(f'a{agent_id}: final update to {status}')
+                # print(f'a{agent_id}: final update to {status}')
                 agent.update_status(status)
         pass
 

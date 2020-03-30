@@ -21,9 +21,9 @@ if requester.is_sandbox():
 object_classes = load_possible_classes()
 
 hits_per_class = {
-    'apple': 10,
-    'banana': 10,
-    'orange': 10,
+    'apple': 3,
+    'banana': 3,
+    'orange': 3,
 }
 
 assert all(k in object_classes for k in hits_per_class)
@@ -42,7 +42,7 @@ ARG_STRING = (
     "--blueprint-type static "
     f"--architect-type {'heroku'} "
     f"--requester-name {requester.requester_name} "
-    '--task-title "\\"Fruit video task v2\\"" '
+    '--task-title "\\"Fruit video task v3\\"" '
     '--task-description "\\"Take a video of a piece of fruit from all sides.\\"" '
     "--task-reward 1.2 "
     "--task-tags static,task,testing "

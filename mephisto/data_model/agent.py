@@ -232,45 +232,45 @@ class Agent(ABC):
         to be returned.
         """
 
-        print(f'a{self.db_id}: Agent act with timeout {timeout}')
+        # print(f'a{self.db_id}: Agent act with timeout {timeout}')
         if len(self.pending_actions) == 0:
-            print(f'a{self.db_id}: No pending actions ... self.wants_action.set()')
+            # print(f'a{self.db_id}: No pending actions ... self.wants_action.set()')
             self.wants_action.set()
             if timeout is None or timeout == 0:
                 return None
-            print(f'a{self.db_id}: Waiting for action')
+            # print(f'a{self.db_id}: Waiting for action')
             self.has_action.wait(timeout)
 
         if len(self.pending_actions) == 0:
             # various disconnect cases
             status = self.get_status()
-            print(f'a{self.db_id}: Agent disconnect')
+            # print(f'a{self.db_id}: Agent disconnect')
             if status == AgentState.STATUS_DISCONNECT:
-                print(f'a{self.db_id}: AgentState.STATUS_DISCONNECT')
+                # print(f'a{self.db_id}: AgentState.STATUS_DISCONNECT')
                 raise AgentDisconnectedError(self.db_id)
             elif status == AgentState.STATUS_RETURNED:
-                print(f'a{self.db_id}: AgentState.STATUS_RETURNED')
+                # print(f'a{self.db_id}: AgentState.STATUS_RETURNED')
                 raise AgentReturnedError(self.db_id)
-            print(f'a{self.db_id}: Update state to AgentState.STATUS_TIMEOUT')
+            # print(f'a{self.db_id}: Update state to AgentState.STATUS_TIMEOUT')
             self.update_status(AgentState.STATUS_TIMEOUT)
             raise AgentTimeoutError(timeout, self.db_id)
         # TODO the below needs to be considered an agent timeout
         assert len(self.pending_actions) > 0, "has_action released without an action!"
 
         act = self.pending_actions.pop(0)
-        print(f'a{self.db_id}: Act={str(act)}')
+        # print(f'a{self.db_id}: Act={str(act)}')
 
         if "MEPHISTO_is_submit" in act.data and act.data["MEPHISTO_is_submit"]:
-            print(f'a{self.db_id}: self.did_submit.set()')
+            # print(f'a{self.db_id}: self.did_submit.set()')
             self.did_submit.set()
 
         # TODO check to see if the act is one of the acts to ERROR on
 
         if len(self.pending_actions) == 0:
-            print(f'a{self.db_id}: self.has_action.clear()')
+            # print(f'a{self.db_id}: self.has_action.clear()')
             self.has_action.clear()
 
-        print(f'a{self.db_id}: update_data: {str(act)}')
+        # print(f'a{self.db_id}: update_data: {str(act)}')
         self.state.update_data(act)
         return act
 
