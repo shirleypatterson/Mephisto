@@ -4,6 +4,7 @@ import time
 import shlex
 from datetime import datetime
 import pytz
+import random
 
 from mephisto.core.local_database import LocalMephistoDB
 from mephisto.core.operator import Operator
@@ -28,36 +29,113 @@ def load_possible_classes():
         classes = [ln.lower().strip() for ln in f.readlines()]
     return classes
 
-def make_object_class_data_file(hits_per_object, html, data_root='./data/launches/'):
+def make_obj_class_selection_ul(cls_sel):
+    """
+    Given a list of classes cls_sel (e.g. [banana, apple, orange]),
+    creates a html string in the following format:
+        <li>ob_class_1
+        <li>ob_class_2
+        <li>ob_class_3
+        ...
+        <li>ob_class_N
+    This is used as input data to the AMT object video collection heroku server.
+    """
+    ob_str=''
+    for cls_ in cls_sel:
+        ob_str+=f'<li>{cls_}'
+    # assert ',' not in ob_str, 'commas not allowed in the string'
+    return ob_str
+
+def multichoice_hits(hits_per_object, multichoice, seed=0):
+    """
+    Generate a list of strings corresponding to the object class lists
+    used for defining the subset of object classes to capture in each HIT.
+    """
+    objs_for_hit = []
+    remaining_hits_per_object_ = hits_per_object.copy()
+    strs = []
+    random.seed(seed)  # set seed for reproducibility ...
+    while sum(remaining_hits_per_object_.values()) > 0:
+        # select "multichoice" unique random classes from the remaining ones
+        unq_classes = list(set(remaining_hits_per_object_.keys()))
+        multichoice_ = min(multichoice, len(unq_classes))
+        cls_sel = sorted(random.sample(unq_classes, multichoice_))
+        # erase the selected classes from remaining_hits_per_object_
+        for cls_ in cls_sel:
+            remaining_hits_per_object_[cls_]-=1
+            if remaining_hits_per_object_[cls_]==0:
+                del remaining_hits_per_object_[cls_]
+        # create the <ul>...<\ul> string
+        ob_str = make_obj_class_selection_ul(cls_sel)
+        strs.append(ob_str)
+    return strs
+
+def make_object_class_data_file(
+    hits_per_object: dict, html: str, 
+    data_root='./data/launches/', 
+    multichoice: int=1
+):
+    
     now = datetime.now(tz=pytz.timezone('US/Pacific'))
     stamp = now.strftime('%y-%m-%d_%H-%M-%S')
     data_file = os.path.join(data_root, stamp + '.csv')
     print(f'Exporting data file: {data_file}')
-    with open(data_file, 'w') as f:
-        f.write('object_class\n')
-        for obclass, n_hits in hits_per_object.items():
-            for _ in range(n_hits):
-                ln = f'{obclass}\n'
-                f.write(ln)
     
-    # make the preview page by replacing the ${object_class} token
-    possible_classes_str = ', '.join(list(set(hits_per_object.keys())))
-    possible_classes_str = f'[One of ({possible_classes_str}) - the actual object will be specified after accepting the HIT]'
-    with open(html, 'r') as f:
-        html_data = f.read()
-    # replace the token
-    html_data_rep = html_data.replace('${object_class}', possible_classes_str)
-    assert html_data_rep!=html_data, '${object_class} token not found!'
+    if multichoice > 1:
+        # make a list of <ul>...<\ul> strings for the HIT inputs
+        object_class_tokens = multichoice_hits(hits_per_object, multichoice)
+        with open(data_file, 'w') as f:
+            f.write('object_class\n')
+            for obclass_token in object_class_tokens:
+                ln = f'{obclass_token}\n'
+                f.write(ln)
+        # make the preview page by replacing the ${object_class} token
+        # the preview ul has all the available classes
+        possible_classes_str = ', '.join(list(set(hits_per_object.keys())))
+        possible_classes_str = (
+            f'[Up to {multichoice} categories from '
+            f'<it>{{{possible_classes_str}}}</it> '
+            '- the actual list of possibilities will be specified '
+            'after accepting the HIT]'
+        )
+        obclass_token = make_obj_class_selection_ul([possible_classes_str])
+        # obclass_token = make_obj_class_selection_ul(
+        #     list(set(hits_per_object.keys())))
+        with open(html, 'r') as f:
+            html_data = f.read()
+        # replace the token
+        html_data_rep = html_data.replace('${object_class}', obclass_token)
+        assert html_data_rep!=html_data, '${object_class} token not found!'
+
+    else:
+        with open(data_file, 'w') as f:
+            f.write('object_class\n')
+            for obclass, n_hits in hits_per_object.items():
+                for _ in range(n_hits):
+                    ln = f'{obclass}\n'
+                    f.write(ln)
+        # make the preview page by replacing the ${object_class} token
+        possible_classes_str = ', '.join(list(set(hits_per_object.keys())))
+        possible_classes_str = f'[One of ({possible_classes_str}) - the actual object will be specified after accepting the HIT]'
+        with open(html, 'r') as f:
+            html_data = f.read()
+        # replace the token
+        html_data_rep = html_data.replace('${object_class}', possible_classes_str)
+        assert html_data_rep!=html_data, '${object_class} token not found!'
+    
     preview_html_file = os.path.join(data_root, stamp + '_preview.html')
     print(f'Exporting preview file: {preview_html_file}')
     with open(preview_html_file, 'w') as f:
         f.write(html_data_rep)
-    # with open(preview_html_file) as f:
-    #     for line in f.readlines():
-    #         print(line.strip())
-    # with open(data_file) as f:
-    #     for line in f.readlines():
-    #         print(line.strip())
+        
+    print('===== preview html =====')
+    with open(preview_html_file) as f:
+        for line in f.readlines():
+            print(line.strip())
+    print('===== data .csv file =====')
+    with open(data_file) as f:
+        for line in f.readlines():
+            print(line.strip())
     return data_file, preview_html_file
 
 #########################

@@ -10,7 +10,7 @@ from david_common import init_david, load_possible_classes, \
 from datetime import datetime
 import pytz
 
-operator, requester = init_david(NO_SANDBOX=1)
+operator, requester = init_david(NO_SANDBOX=0)
 db = operator.db
 
 if requester.is_sandbox():
@@ -37,11 +37,10 @@ print(f'Submitting {n_hits_total} HITs:')
 for clas, n_hits in hits_per_class.items():
     print(f'{clas:20s}: {n_hits} hits')
 
-html_source = "merged.out.html"
-data_file, preview_html = make_object_class_data_file(hits_per_class, html_source)
+html_source = "merged.multiclass.html"
+data_file, preview_html = make_object_class_data_file(
+    hits_per_class, html_source, multichoice=2)
 
-#frame height greater than 650
-#task timeout 18000=5 hours
 #The argument string goes through shlex.split twice, hence the quoting.
 ARG_STRING = (
     "--blueprint-type static "
