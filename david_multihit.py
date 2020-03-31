@@ -15,6 +15,9 @@ db = operator.db
 
 if requester.is_sandbox():
     os.environ["SKIP_LOCALE_REQUIREMENT"]="TRUE"
+else:
+    os.environ["PRODUCTION_AMT_RUN"]="TRUE"
+    print('Warning: Production AMT run!')
 
 # data stored to:
 # /private/home/dnovotny/mephisto/data/data/runs/NO_PROJECT/4/2/2
@@ -34,7 +37,8 @@ print(f'Submitting {n_hits_total} HITs:')
 for clas, n_hits in hits_per_class.items():
     print(f'{clas:20s}: {n_hits} hits')
 
-data_file = make_object_class_data_file(hits_per_class)
+html_source = "merged.out.html"
+data_file, preview_html = make_object_class_data_file(hits_per_class, html_source)
 
 #frame height greater than 650
 #task timeout 18000=5 hours
@@ -43,13 +47,14 @@ ARG_STRING = (
     "--blueprint-type static "
     f"--architect-type {'heroku'} "
     f"--requester-name {requester.requester_name} "
-    '--task-title "\\"Fruit video task v2\\"" '
+    '--task-title "\\"Fruit video task v4\\"" '
     '--task-description "\\"Take a video of a piece of fruit from all sides.\\"" '
     "--task-reward 1.2 "
     "--task-tags static,task,testing "
     f'--data-csv "{data_file}" '
-    '--assignment-duration-seconds 60 ' # max time for a worker to complete.
-    '--task-source "merged.out.html" '
+    '--assignment-duration-seconds 1200 ' # max time for a worker to complete.
+    f'--task-source "{html_source}" '
+    f'--preview-source "{preview_html}" '
     #'--allow-mobile required '
     '--extra-source-dir payload '
     #'--html-source "task.html" '
@@ -79,7 +84,6 @@ try:
                     # agent = unit.get_assigned_agent()
                     # if agent is not None:
                     #     print(str(agent))
-
             print('---')
 
         time.sleep(10)
