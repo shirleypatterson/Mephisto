@@ -24,10 +24,11 @@ else:
 
 object_classes = load_possible_classes()
 
+classes_per_hit = 2
 hits_per_class = {
-    'apple': 10,
-    'banana': 10,
-    'orange': 10,
+    'apple': 3,
+    'banana': 3,
+    'orange': 3,
 }
 
 assert all(k in object_classes for k in hits_per_class)
@@ -39,14 +40,14 @@ for clas, n_hits in hits_per_class.items():
 
 html_source = "merged.multiclass.html"
 data_file, preview_html = make_object_class_data_file(
-    hits_per_class, html_source, multichoice=2)
+    hits_per_class, html_source, multichoice=classes_per_hit)
 
 #The argument string goes through shlex.split twice, hence the quoting.
 ARG_STRING = (
     "--blueprint-type static "
     f"--architect-type {'heroku'} "
     f"--requester-name {requester.requester_name} "
-    '--task-title "\\"Fruit video task v4\\"" '
+    '--task-title "\\"Fruit video task v5\\"" '
     '--task-description "\\"Take a video of a piece of fruit from all sides.\\"" '
     "--task-reward 1.2 "
     "--task-tags static,task,testing "
@@ -75,7 +76,6 @@ try:
             task_run_asgn = db.find_assignments(task_run_id=task_run_id)
             print(f'=> Assignments #={len(task_run_asgn)} <=')
             for asgn in task_run_asgn:
-                asgn_units = asgn.get_units()
                 print_assignment(asgn)
                 # print('=> Units <=')
                 # for unit in asgn_units:
