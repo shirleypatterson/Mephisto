@@ -13,7 +13,7 @@
 
 _Note:_
 - This requires MaskRCNN (included in the latest `torchvision`) and a compiled `AprilTag` QR code detector. 
-- For now, we can simply skip the two aforementioned steps and only run the checks that validate the files are videos of a certain minimal duration.
+- For now, we can simply skip the two aforementioned steps and only validate that the AMT uploads are videos of a certain minimal duration.
 - The latter can be done by simply commenting lines 147-171 in https://github.com/fairinternal/RoomViews/blob/master/object_dataset_collection/amt_data_check/check_videos.py
 
 ## Finally reward the workers based on the results of the previous data check:
