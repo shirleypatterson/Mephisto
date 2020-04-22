@@ -10,7 +10,7 @@ from david_common import init_david, load_possible_classes, \
 from datetime import datetime
 import pytz
 
-operator, requester = init_david(NO_SANDBOX=0)
+operator, requester = init_david(NO_SANDBOX=1)
 db = operator.db
 
 if requester.is_sandbox():
@@ -19,17 +19,16 @@ else:
     os.environ["PRODUCTION_AMT_RUN"]="TRUE"
     print('Warning: Production AMT run!')
 
-# data stored to:
-# /private/home/dnovotny/mephisto/data/data/runs/NO_PROJECT/4/2/2
-
 object_classes = load_possible_classes()
 
-classes_per_hit = 2
-hits_per_class = {
-    'apple': 3,
-    'banana': 3,
-    'orange': 3,
+# ----- EDIT THIS BEFORE EVERY RUN -----
+classes_per_hit = 2 # set the number of classes to display per hit
+hits_per_class = {  # total number of class entries to be displayed
+    'apple': 20,
+    'banana': 20,
+    'orange': 20,
 }
+# --------------------------------------
 
 assert all(k in object_classes for k in hits_per_class)
 
@@ -49,7 +48,7 @@ ARG_STRING = (
     f"--requester-name {requester.requester_name} "
     '--task-title "\\"Fruit video task v5\\"" '
     '--task-description "\\"Take a video of a piece of fruit from all sides.\\"" '
-    "--task-reward 1.2 "
+    "--task-reward 1. "
     "--task-tags static,task,testing "
     f'--data-csv "{data_file}" '
     '--assignment-duration-seconds 1200 ' # max time for a worker to complete.

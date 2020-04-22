@@ -21,12 +21,17 @@ client = get_boto_client(requester)
 do_not_check_qr = True # override automated qr code check
 bonus_amount = 0.3
 
-task_run_id = '20'
+# task_run_id = '20'
+task_run_id = '29'
 data_check_root = '/checkpoint/dnovotny/object_videos_amt/mephisto_runs/NO_PROJECT/'
+dry_run = False
+
+REJECT_ASSIGN_IDS = [364,355]
 
 assignments = db.find_assignments(
     task_run_id=task_run_id,
 )
+
 
 for asgn in assignments:
     print_assignment(asgn)
@@ -47,38 +52,60 @@ for asgn in assignments:
                 if not data_check_info['is_video']:
                     print(colored(f'not a video: {video_file}', 'red'))
                     print('-> REJECT')
-                    try:
-                        agent.reject_work(
-                            'Unfortunately, the uploaded file is not a video.' 
-                            'Hence, we are rejecting the HIT, sorry.'
-                        )
-                    except client.exceptions.RequestError as e:
-                        print('Cant reject the agent '
-                                '(probably already rejected before):')
-                        print(e)
+                    if not dry_run:
+                        try:
+                            agent.reject_work(
+                                'Unfortunately, the uploaded file is not a video.' 
+                                'Hence, we are rejecting the HIT, sorry.'
+                            )
+                        except client.exceptions.RequestError as e:
+                            print('Cant reject the agent '
+                                    '(probably already rejected before):')
+                            print(e)
+                    continue
+
+                # check manually rejected assign ids
+                if int(asgn.db_id) in REJECT_ASSIGN_IDS:
+                    print(colored(f'manual reject: {video_file}', 'red'))
+                    print('-> REJECT')
+                    if not dry_run:
+                        try:
+                            agent.reject_work(
+                                'Unfortunately, we cant accept your video, sorry.'
+                            )
+                        except client.exceptions.RequestError as e:
+                            print('Cant reject the agent '
+                                    '(probably already rejected before):')
+                            print(e)
                     continue
 
                 # if everything above passes -> approve
                 print(colored(f'good: {video_file}', 'green'))
                 print('-> APPROVE')
                 already_approved = False
-                try:
-                    agent.approve_work()
-                except client.exceptions.RequestError as e:
-                    print('Cant reward the agent '
-                        '(probably already rewarded):')
-                    print(e)
-                    already_approved = True
+                if not dry_run:
+                    try:
+                        agent.approve_work()
+                    except client.exceptions.RequestError as e:
+                        print('Cant reward the agent '
+                            '(probably already rewarded):')
+                        print(e)
+                        already_approved = True
 
                 # pay bonus for QR
                 if data_check_info['marked_with_qr']:
                     if not already_approved:  # make sure we do not pay twice!
-                        if data_check_info['has_qr'] or do_not_check_qr:
+                        if data_check_info['has_qr']:
                             print('-> PAYING BONUS')
-                            pay_qr_bonus(agent, bonus_amount)        
+                            if not dry_run:
+                                pay_qr_bonus(agent, bonus_amount)        
                         else:
                             print(colored(
                                 'No QR present (despite indicated)', 'red'))
+                            if do_not_check_qr:
+                                print('-> PAYING BONUS ANYWAY')
+                                if not dry_run:
+                                    pay_qr_bonus(agent, bonus_amount)
                             continue
                     else:
                          print('-> BONUS ALREADY PAYED')
