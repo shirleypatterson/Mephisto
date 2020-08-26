@@ -54,7 +54,7 @@ class TaskLauncher:
         db: "MephistoDB",
         task_run: "TaskRun",
         assignment_data_iterator: Iterator[InitializationData],
-        max_num_concurrent_units: int = 0,
+        max_num_concurrent_units: int = 15,
     ):
         """Prepare the task launcher to get it ready to launch the assignments"""
         self.db = db
